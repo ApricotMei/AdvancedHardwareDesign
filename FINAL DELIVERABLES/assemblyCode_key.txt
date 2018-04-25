@@ -1,0 +1,40 @@
+; R1=0=i, R2 = 26, R3 = S[i], R4 = A_REG, R5 = B_REG, R8= 150 =j, R9 = 153, R10 = L[j], R11 = A+B 
+; R16 = (A+B) 5 bits, R14 =shift counter, R15 = 3
+ADDI R1, R0, 0        ; skey[0]
+ADDI R2, R0, 25       
+ADDI R4, R0, 0
+ADDI R5, R0, 0
+ADDI R8, R0, 30       ; ukey[0]
+ADDI R9, R0, 34       
+ADDI R14, R0, 0
+ADDI R15, R0, 3        ; Round time     
+ADDI R18, R0, 52       
+SUBI R15, R15, 1       ; Each time ¨C 1 ----- line 10 
+ADDI R14, R0, 0 
+LW R3, 0[R1]          ; S[0]
+LW R10, 0[R8]         ; L[0]
+ADD R6, R3, R4        ; S[0]+A = R6
+ADD R7, R6, R5        ; S[0]+A+B = R7
+SHL R4, R7, 3          ; (S[0]+A+B) <<<3 = R4
+SW R4, 0[R1]          ; Store A_reg back to S[i] 
+ADDI R1, R1, 1         ; i= i+1
+ADD R11, R4, R5       ; A+B = R11
+ADD R5, R10, R11      ; L[0]+A+B = R12
+ANDI R16, R11, 31      ; Get the last 5 bits of A+B
+BEQ R0, R16, 3         ; IF 0= R16= A+B (5 bits) then no shift, store R15 directly 
+SHL R5, R5, 1          ; Shift 1 bit and store in R5
+ADDI R14, R14, 1       ; Shift counter increase 1 
+BLT R16, R14, -3        ; If R14 < R11 = A+B then go back to shift
+SW R5, 0[R8]          ; Store B_reg to L[j]
+ADDI R8, R8, 1 	     ; Else j = j+1
+ADDI R17, R17, 1       ; Total counter 
+BLT R1, R2, 3           ; If i>25 then go to the next round 
+BLT R9, R8, -20         ; If j > 4 then go back to j = 0
+ADDI R8, R0, 30
+JMP 11             
+BEQ R17, R18, 1        ; If total counter = 52, then R8 = 30 
+JMP 36
+ADDI R8, R0, 30
+ADDI R1, R0, 0         ; If i=25 then go back to i = 0         
+BLT R15, R0, -28        ; If R15>0 the go back to line 9  
+HALT                 ; Else stop 

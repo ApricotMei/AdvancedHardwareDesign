@@ -1,0 +1,50 @@
+; Address 0-25 are the generated keys, input A is at 26, B is at 27
+; R0-stay 0 for addressing, R1-S, R2-A, R3-B
+; Set R8 as the address of S_ARRAY
+LW R2, 26D(R0)       ; Read A from 26 
+LW R3, 27D(R0)       ; Read B from 27 
+ADDI R10, R10, 26D    ; Set R10 = 26 as the limit number of S 
+LW R1, 0(R8)         ; Load S[0] to R1-S(Rt) 
+ADD R2, R1, R2       ; A_ini(R2) = A + S[0] 
+ADDI R8, R8, 1       ; Increase 1 for address of S 
+LW R1, 0(R8)         ;Load S[1] to R1 
+ADD R3, R1, R3       ; B_ini(R3) = B + S[1] 
+ADDI R8, R8, 1        ; Increase 1 for address of S 
+; A = A_ini XOR B_ini 
+LW R1, 0(R8)         ; Load S[2] to R1 
+NOR R2, R2, R4       ; A_ini NOR1 A_ini = A1(R4) 
+NOR R3, R3, R5       ; B_ini NOR2 B_ini = B2(R5) 
+NOR R4, R5, R6       ; A1 NOR3 B2 = A3(R6)
+NOR R2, R3, R7       ; A_ini NOR4 B_ini = B4(R7) 
+NOR R6, R7, R2       ; A3 NOR5 B4 = A_xor(R2-A_ini) 
+; R9 as the decrease shift value, keep the value in R3-A
+; A_rot = A_xor <<< B_ini
+ANDI R3, R9, 31D     ; R9 = R3 (shift value B_ini) 
+BEQ R9, R0, 3        ; if shift value is 0, then jump to A = A_rot + S[2]
+SHL R2, R2, 1        ; shift left 1
+SUBI R9, R9, 1       ; B_ini - 1
+BNE R9, R0, -3       ; If B(R9) != 0(R0), then jump back to SHL 
+; A[1] = A_rot + S[2*i]
+ADD R2, R1, R2      ; A[1] = A_rot + S[2] 
+ADDI R8, R8, 1       ; Increase 1 for address of S 
+LW R1, 0(R8)        ; Load S[3] to R1
+; B = B_ini XOR A[1]
+NOR R3, R3, R4      ; B_ini NOR1 B_ini = B1(R4) 
+NOR R2, R2, R5      ; A[1] NOR2 A[1] = A2(R5) 
+NOR R4, R5, R6      ; B1 NOR3 A2 = B3(R6)
+NOR R3, R2, R7      ; B_ini NOR4 A[1] = A4(R7) 
+NOR R6, R7, R3      ; B3 NOR5 A4 = B_xor(R3-B_ini)
+; R9 as the shift value, keep the value in R2-A, should already be 0 from the decrease in A
+ANDI R2, R9, 31D    ; R9 = R2 AND 11111(only use last 5 digits of shift value A[1])
+; B_rot = B_xor <<< A[1]
+BEQ R9, R0, 3       ; if shift value is 0, then jump to B = B_rot + S[3]
+SHL R3, R3, 1       ; shift left 1
+SUBI R9, R9, 1      ; A[1] - 1 
+BNE R9, R0, -3      ; If A[1](R9) != 0(R0), then jump back to SHL
+; B[1] = B_rot + S[2*i+1]
+ADD R3, R1, R3     ; B[1] = B_rot + S[3]
+ADDI R8, R8, 1     ; Increase 1 for address of S 
+BNE R8, R10, -27   ; if address is not 26 then go back to line 10 where the first XOR starts
+SW R2, 28D(R0)     ;Store A to address 28 
+SW R3, 29D(R0)     ;Store B to address 29
+HALT
