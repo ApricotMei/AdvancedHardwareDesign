@@ -1,6 +1,0 @@
-The test bench is made base on the processor which is not going to put on the fpga board (which is the processor in NYU_6463Peocessor_NoFPGA_NoFile file).
-
-The output contain the values in data memory after every clock cycle before the rc5 round key generation has finished. (which is in zip file(GitHub doesn’t allow me to submit large file))
-
-The link of demo video:https://youtu.be/Kn6wPVlJafQ
-(still, GitHub doesn’t allow me to submit large file)
